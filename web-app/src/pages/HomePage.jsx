@@ -5,8 +5,8 @@ import Button from "../components/ui/Button";
 import { useAuthContext } from "../contexts/AuthContext";
 import LoadingSpinner from "../components/LoadingSpinner";
 import { useNavigate } from "react-router-dom";
-import { useRoomContext } from "../contexts/RoomContext";
 import Input from "../components/ui/Input";
+import { createRoomAsync, useRoom } from "../hooks/useRoom";
 
 function HomePage() {
   const {
@@ -16,7 +16,7 @@ function HomePage() {
     logout,
   } = useAuthContext();
 
-  const { rooms, loading: roomsLoading } = useRoomContext();
+  const { rooms, loading: roomsLoading } = useRoom();
   const [topic, setTopic] = useState("");
   const [roomCode, setRoomCode] = useState("");
   const [isCreating, setIsCreating] = useState(false);
@@ -27,23 +27,23 @@ function HomePage() {
   }, [user]);
 
   const handleCreateRoom = async () => {
-    /* if (!topic.trim()) return;
-    
+    if (!topic.trim()) return;
+
     setIsCreating(true);
     try {
       const roomId = await createRoomAsync(user.uid, topic.trim());
       navigate(`/room/${roomId}`);
     } catch (error) {
-      console.error('Error creating room:', error);
+      console.error("Error creating room:", error);
     } finally {
       setIsCreating(false);
-    } */
+    }
   };
 
   const handleJoinRoom = () => {
-    /*  if (roomCode.trim()) {
+    if (roomCode.trim()) {
       navigate(`/room/${roomCode.trim()}`);
-    } */
+    }
   };
 
   if (authLoading) {
