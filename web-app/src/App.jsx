@@ -5,15 +5,20 @@ import "./App.css";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import HomePage from "./pages/HomePage";
 import { AuthProvider } from "./contexts/AuthContext";
+import { RoomProvider } from "./contexts/RoomContext";
 
 function App() {
   return (
     <AuthProvider>
-      <Router>
-        <Routes>
-          <Route path="/" element={<HomePage />} />
-        </Routes>
-      </Router>
+      <RoomProvider>
+        <Router>
+          <div className="App">
+            <Routes>
+              <Route path="/" element={<HomePage />} />
+            </Routes>
+          </div>
+        </Router>
+      </RoomProvider>
     </AuthProvider>
   );
 }
