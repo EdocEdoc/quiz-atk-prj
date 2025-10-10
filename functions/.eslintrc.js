@@ -1,22 +1,39 @@
 module.exports = {
+  root: true,
   env: {
     es6: true,
     node: true,
   },
+  parser: "@typescript-eslint/parser",
   parserOptions: {
-    ecmaVersion: 2020,
+    project: ["tsconfig.json", "tsconfig.dev.json"],
+    sourceType: "module",
   },
-  extends: ["eslint:recommended"],
+  extends: [
+    "eslint:recommended",
+    "plugin:@typescript-eslint/recommended",
+    "plugin:import/errors",
+    "plugin:import/warnings",
+    "plugin:import/typescript",
+  ],
+  plugins: ["@typescript-eslint", "import"],
+  ignorePatterns: ["/lib/**/*", "/generated/**/*"],
   rules: {
-    // 💡 Style relaxations
+    // ✅ Style relaxed
     quotes: ["warn", "double", { allowTemplateLiterals: true }],
     semi: ["warn", "always"],
-    "object-curly-spacing": "off",
     indent: "off",
-    "no-unused-vars": "warn",
-    "no-console": "off",
+    "object-curly-spacing": "off",
+    "comma-dangle": "off",
+    "max-len": "off",
 
-    // Optional: turn errors into warnings
-    "prefer-arrow-callback": "warn",
+    // ✅ TypeScript-specific relaxations
+    "@typescript-eslint/no-explicit-any": "off",
+    "@typescript-eslint/no-unused-vars": ["warn", { argsIgnorePattern: "^_" }],
+    "@typescript-eslint/explicit-module-boundary-types": "off",
+
+    // ✅ General code quality
+    "no-console": "off",
+    "import/no-unresolved": "off",
   },
 };
