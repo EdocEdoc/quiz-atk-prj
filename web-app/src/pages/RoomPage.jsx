@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAuthContext } from "../contexts/AuthContext";
-import { joinRoom, useRoom } from "../hooks/useRoom";
+import { joinRoom, startBattle, useRoom } from "../hooks/useRoom";
 import LoadingSpinner from "../components/LoadingSpinner";
 import { GAME_STATUS } from "../utils/types";
 import Button from "../components/ui/Button";

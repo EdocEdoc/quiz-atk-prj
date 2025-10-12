@@ -8,7 +8,7 @@
  */
 
 import { setGlobalOptions } from "firebase-functions";
-import { onRequest } from "firebase-functions/https";
+import { HttpsError, onCall, onRequest } from "firebase-functions/v2/https";
 import * as admin from "firebase-admin";
 import * as logger from "firebase-functions/logger";
 import * as dotenv from "dotenv";
@@ -37,6 +37,13 @@ interface LectureData {
   topic: string;
   lecture: string;
   quizList: QuizQuestion[];
+}
+
+interface ProcessAnswerData {
+  roomId: string;
+  questionIndex: number;
+  answerIndex: number;
+  apiKey?: string;
 }
 
 // Generate lecture and quiz using GPT
@@ -317,49 +324,66 @@ export const callGemini = onRequest(async (req, res) => {
   }
 });
 
-export const processAnswer = onRequest(async (req, res) => {
+export const processAnswer = onCall<ProcessAnswerData>(async (request) => {
   try {
-    const authHeader = req.headers.authorization;
-    if (!authHeader?.startsWith("Bearer ")) {
-      res.status(403).send("User must be authenticated");
-      return;
+    const { roomId, questionIndex, answerIndex, apiKey } = request.data;
+
+    // 🔒 Auth check
+    const userId = request.auth?.uid;
+    if (!userId) {
+      throw new HttpsError(
+        "unauthenticated",
+        "User must be signed in to call this function."
+      );
     }
 
-    /* const idToken = authHeader.split("Bearer ")[1];
-    const decodedToken = await admin.auth().verifyIdToken(idToken);
-    const userId = decodedToken.uid; */
+    // 🔐 Optional API key check
+    const privateAPIKey = process.env.PRIVATE_API_KEY;
+    if (!privateAPIKey) {
+      throw new HttpsError(
+        "failed-precondition",
+        "Missing PRIVATE_API_KEY in environment."
+      );
+    }
+    if (apiKey && apiKey !== privateAPIKey) {
+      throw new HttpsError("permission-denied", "Invalid API key.");
+    }
 
-    const { roomId, questionIndex, answerIndex, uid } = req.body;
-    const userId = uid;
+    if (!roomId || questionIndex === undefined || answerIndex === undefined) {
+      throw new HttpsError(
+        "invalid-argument",
+        "Missing required fields: roomId, questionIndex, or answerIndex."
+      );
+    }
 
-    // Your business logic here
+    // 🧠 Business logic
     const roomRef = admin.firestore().collection("rooms").doc(roomId);
     const roomDoc = await roomRef.get();
 
     if (!roomDoc.exists) {
-      throw new functions.https.HttpsError("not-found", "Room not found");
+      throw new HttpsError("not-found", "Room not found.");
     }
 
     const room = roomDoc.data() as any;
 
     if (room.status !== "battle") {
-      throw new functions.https.HttpsError(
-        "failed-precondition",
-        "Room is not in battle mode"
-      );
+      throw new HttpsError("failed-precondition", "Room is not in battle mode");
     }
 
     const question = room.quizList[questionIndex];
     if (!question) {
-      throw new functions.https.HttpsError(
-        "invalid-argument",
-        "Invalid question index"
-      );
+      throw new HttpsError("invalid-argument", "Invalid question index");
     }
 
     const isCorrect = answerIndex === question.answerIndex;
-    const isHost = room.hostId === userId;
-    const isAttacker = room.currentTurn === (isHost ? "host" : "guest");
+    const isAttacker = room?.currentAction
+      ? true
+      : room?.currentAction === "attack";
+    const enemy: { host: "guest"; guest: "host" } = {
+      host: "guest",
+      guest: "host",
+    };
+    const turnName: "host" | "guest" = room?.currentTurn || "host";
 
     const newHp = { ...room.hp };
     let damage = 0;
@@ -367,37 +391,28 @@ export const processAnswer = onRequest(async (req, res) => {
     if (isAttacker) {
       // Attacker logic
       if (isCorrect) {
+        damage = 2;
+        newHp[enemy[turnName]] = Math.max(0, newHp[enemy[turnName]] - damage);
+      } else {
         damage = 1;
-        newHp[isHost ? "guest" : "host"] = Math.max(
-          0,
-          newHp[isHost ? "guest" : "host"] - damage
-        );
+        newHp[enemy[turnName]] = Math.max(0, newHp[enemy[turnName]] - damage);
       }
     } else {
       // Defender logic
       if (isCorrect) {
         damage = -1; // Block damage
-        newHp[isHost ? "host" : "guest"] = Math.max(
-          0,
-          newHp[isHost ? "host" : "guest"] + 1
-        );
+        const maxHp = 10;
+        newHp[turnName] = Math.min(maxHp, newHp[turnName] + 1);
       }
     }
 
-    // Check for winner
     const winner =
       newHp.host === 0 ? "guest" : newHp.guest === 0 ? "host" : null;
 
-    // Update room
     const updateData: any = {
       hp: newHp,
-      currentTurn: isAttacker
-        ? isHost
-          ? "guest"
-          : "host"
-        : isHost
-        ? "host"
-        : "guest",
+      currentTurn: isAttacker ? enemy[turnName] : turnName,
+      currentAction: isAttacker ? "defend" : "attack",
     };
 
     if (winner) {
@@ -408,30 +423,18 @@ export const processAnswer = onRequest(async (req, res) => {
 
     await roomRef.update(updateData);
 
-    // Log battle event
-    await admin
-      .firestore()
-      .collection("rooms")
-      .doc(roomId)
-      .collection("battleLog")
-      .add({
-        userId,
-        questionIndex,
-        answerIndex,
-        isCorrect,
-        isAttacker,
-        damage,
-        timestamp: admin.firestore.FieldValue.serverTimestamp(),
-      });
-
-    res.json({
+    await roomRef.collection("battleLog").add({
+      userId,
+      questionIndex,
+      answerIndex,
       isCorrect,
+      isAttacker,
       damage,
-      newHp,
-      winner,
+      timestamp: admin.firestore.FieldValue.serverTimestamp(),
     });
-  } catch (err) {
-    logger.error("processAnswer API Error", err);
-    res.status(500).json({ error: (err as Error).message });
+
+    return { isCorrect, damage, newHp, winner };
+  } catch (error) {
+    throw new HttpsError("internal", (error as Error).message);
   }
 });

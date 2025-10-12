@@ -87,7 +87,8 @@ export const createRoomAsync = async (hostId, hostTopic) => {
       finalTopic: null,
       lecture: null,
       quizList: [],
-      currentTurn: null,
+      currentTurn: "host",
+      currentAction: "attack",
       hp: { host: 10, guest: 10 },
       createdAt: new Date(),
     };
