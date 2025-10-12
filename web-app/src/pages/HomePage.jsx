@@ -21,6 +21,8 @@ import {
   deleteRoom,
 } from "../hooks/useRoom";
 
+const MAX_TOPIC_LENGTH = 100;
+
 function HomePage() {
   const {
     user,
@@ -129,24 +131,40 @@ function HomePage() {
             <Card className="p-6">
               <h2 className="text-2xl font-bold text-white mb-4 flex items-center">
                 <Plus className="w-6 h-6 mr-2" />
-                Create Room
+                  Create Room
               </h2>
-              <div className="space-y-4">
-                <Input
-                  placeholder="Enter a topic for your quiz..."
-                  value={topic}
-                  onChange={(e) => setTopic(e.target.value)}
-                  className="w-full"
-                />
-                <Button
-                  onClick={handleCreateRoom}
-                  disabled={!topic.trim() || isCreating}
-                  className="w-full bg-green-600 hover:bg-green-700"
-                >
-                  {isCreating ? "Creating..." : "Create Room"}
-                </Button>
-              </div>
-            </Card>
+          <div className="space-y-4">
+          <div>
+            <label className="block text-gray-300 text-sm mb-2">
+              Topic ({topic.length}/{MAX_TOPIC_LENGTH})
+            </label>
+              <Input
+              placeholder="Enter a topic for your quiz..."
+              value={topic}
+              onChange={(e) => {
+              const value = e.target.value;
+                if (value.length <= MAX_TOPIC_LENGTH) {
+                  setTopic(value);
+                  }
+                }}
+              maxLength={MAX_TOPIC_LENGTH}
+              className="w-full"
+              />
+              {topic.length >= MAX_TOPIC_LENGTH && (
+              <p className="text-yellow-400 text-xs mt-1">
+              Maximum character limit reached
+              </p>
+              )}
+          </div>
+          <Button
+            onClick={handleCreateRoom}
+            disabled={!topic.trim() || isCreating}
+            className="w-full bg-green-600 hover:bg-green-700"
+          >
+            {isCreating ? "Creating..." : "Create Room"}
+          </Button>
+          </div>
+      </Card>
             {/* Join Room */}
             <Card className="p-6">
               <h2 className="text-2xl font-bold text-white mb-4 flex items-center">
