@@ -18,7 +18,6 @@ function RoomPage() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    console.log("🚀 ~ RoomPage ~ room:", room);
     if (room && room.status === GAME_STATUS.BATTLE) {
       navigate(`/battle/${roomId}`);
     }

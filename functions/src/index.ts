@@ -77,10 +77,7 @@ export const generateLecture = functions.firestore.onDocumentUpdated(
           lecture: lectureData.lecture,
           quizList: lectureData.quizList,
         });
-
-        console.log(`Generated lecture and quiz for room ${roomId}`);
       } catch (error) {
-        console.error("Error generating lecture:", error);
         // Update room with error status
         await admin.firestore().collection("rooms").doc(roomId).update({
           status: "error",
@@ -111,7 +108,6 @@ Return only the combined topic as a single sentence, no additional text.`;
 
     return text?.trim() || `${hostTopic} and ${guestTopic}`;
   } catch (error) {
-    console.error("Error generating combined topic:", error);
     return `${hostTopic} and ${guestTopic}`;
   }
 }
@@ -210,7 +206,6 @@ STRICTLY Ensure the JSON is properly formatted and can be parsed.`;
 
     return data;
   } catch (error) {
-    console.error("Error parsing Gemini response:", error);
     throw new Error("Failed to parse lecture and quiz data");
   }
 }
