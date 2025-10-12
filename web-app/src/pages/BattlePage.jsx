@@ -216,7 +216,6 @@ function BattlePage() {
                 </h2>
                 <div className="flex items-center justify-center space-x-4 text-gray-300">
                   <span className="flex items-center">
-                    Current Turn:{" "}
                     {room?.currentTurn === "host" ? "Host" : "Guest"}
                     {room?.currentAction === "attack" ? (
                       <Sword className="w-4 h-4 ml-1" />
@@ -254,10 +253,18 @@ function BattlePage() {
                   <Button
                     onClick={submitAnswer}
                     disabled={selectedAnswer === null}
-                    className="bg-red-600 hover:bg-red-700 text-lg px-8 py-3"
+                    className={
+                      room?.currentAction === "defend"
+                        ? "bg-green-600 hover:bg-green-700 text-lg px-8 py-3"
+                        : "bg-red-600 hover:bg-red-700 text-lg px-8 py-3"
+                    }
                   >
-                    <Sword className="w-5 h-5 mr-2" />
-                    Attack!
+                    {room?.currentAction === "defend" ? (
+                      <Shield className="w-5 h-5 mr-2" />
+                    ) : (
+                      <Sword className="w-5 h-5 mr-2" />
+                    )}
+                    {room?.currentAction === "defend" ? "Defend!" : "Attack!"}
                   </Button>
                 </div>
               )}
