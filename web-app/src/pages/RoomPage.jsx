@@ -17,6 +17,8 @@ function RoomPage() {
   const [isJoining, setIsJoining] = useState(false);
   const navigate = useNavigate();
 
+  const MAX_TOPIC_LENGTH = 100; 
+
   useEffect(() => {
     console.log("🚀 ~ RoomPage ~ room:", room);
     if (room && room.status === GAME_STATUS.BATTLE) {
@@ -145,9 +147,25 @@ function RoomPage() {
                 <div className="space-y-4">
                   <div>
                     <label className="block text-gray-300 text-sm mb-2">
-                      Topic
+                      Your Topic ({guestTopic.length}/{MAX_TOPIC_LENGTH})
                     </label>
-                    <p className="text-white font-medium">{room.guestTopic}</p>
+                    <Input
+                      placeholder="Enter your topic..."
+                      value={guestTopic}
+                      onChange={(e) => {
+                          const value = e.target.value;
+                          if (value.length <= MAX_TOPIC_LENGTH) {
+                          setGuestTopic(value);
+                              }
+
+                      }}
+                      maxLength={MAX_TOPIC_LENGTH}
+                    />
+                    {guestTopic.length >= MAX_TOPIC_LENGTH && (
+                    <p className="text-yellow-400 text-xs mt-1">
+                    Maximum character limit reached
+                    </p>
+                      )}
                   </div>
                   <div>
                     <label className="block text-gray-300 text-sm mb-2">
