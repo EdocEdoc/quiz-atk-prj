@@ -70,76 +70,6 @@ export const generateLecture = functions.firestore.onDocumentUpdated(
         // Generate lecture and quiz
         const lectureData = await generateLectureAndQuiz(combinedTopic);
 
-        /* const earthquakeLecture: LectureData = {
-          topic: "Earthquake",
-          lecture: `
-An earthquake is the shaking of the surface of the Earth caused by a sudden release of energy in the Earth's lithosphere. 
-This energy release creates seismic waves that travel through the ground. 
-Most earthquakes occur along fault lines, where tectonic plates meet and move. 
-The strength of an earthquake is measured using the Richter scale, and its intensity is observed using the Modified Mercalli Intensity (MMI) scale.
-  `,
-          quizList: [
-            {
-              id: "q1",
-              question: "What causes an earthquake?",
-              choices: [
-                "Movement of tectonic plates",
-                "Volcanic eruption",
-                "Heavy rainfall",
-                "Wind erosion",
-              ],
-              answerIndex: 0,
-            },
-            {
-              id: "q2",
-              question: "What instrument is used to record earthquake waves?",
-              choices: [
-                "Thermometer",
-                "Seismograph",
-                "Barometer",
-                "Anemometer",
-              ],
-              answerIndex: 1,
-            },
-            {
-              id: "q3",
-              question: "Which scale measures the magnitude of an earthquake?",
-              choices: [
-                "Richter scale",
-                "Beaufort scale",
-                "Fujita scale",
-                "Saffir-Simpson scale",
-              ],
-              answerIndex: 0,
-            },
-            {
-              id: "q4",
-              question:
-                "What type of boundary is most commonly associated with earthquakes?",
-              choices: [
-                "Transform boundary",
-                "Divergent boundary",
-                "Convergent boundary",
-                "All of the above",
-              ],
-              answerIndex: 3,
-            },
-            {
-              id: "q5",
-              question:
-                "What should you do during an earthquake if you're indoors?",
-              choices: [
-                "Run outside immediately",
-                "Stand under a doorway or sturdy furniture",
-                "Use the elevator",
-                "Light a candle",
-              ],
-              answerIndex: 1,
-            },
-          ],
-        };
-
-        const lectureData = earthquakeLecture; */
         // Update room with generated content
         await admin.firestore().collection("rooms").doc(roomId).update({
           status: "lecture",
@@ -206,18 +136,20 @@ export const helloWorld = onRequest((request, response) => {
 
 // Helper function to generate lecture and quiz
 async function generateLectureAndQuiz(topic: string): Promise<LectureData> {
-  const prompt = `You are Quiz Attack assistant. Given this topic, generate a short lecture (2-5 min read) and exactly 10 multiple-choice questions.
+  const prompt = `You are Quiz Attack assistant. Given this topic, generate a short lecture (2-5 min read) and exactly 15 multiple-choice questions.
+  Question should have 4 answer choices, with one correct answer. The questions should be challenging but fair, testing key concepts from the lecture.
+  Questions should scale in difficulty, starting easier and getting harder.
 
-Topic: "${topic}"
-
-Return JSON in this exact format (no markdown, no explanation):
+  Topic: "${topic}"
+  
+  Return JSON in this exact format (no markdown, no explanation):
 {
   "topic": "${topic}",
   "lecture": "Your lecture content here...",
   "quizList": [
     {
       "question": "Question 1?",
-      "choices": ["A) Option 1", "B) Option 2", "C) Option 3", "D) Option 4"],
+      "choices": ["Option 1", "Option 2", "Option 3", "Option 4"],
       "answerIndex": 0,
       "id": "q1"
     }

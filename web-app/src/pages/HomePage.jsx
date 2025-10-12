@@ -97,7 +97,7 @@ function HomePage() {
             <p className="text-gray-300">
               Challenge friends in AI-powered quiz battles!
             </p>
-            <p className="text-gray-400">v1.0.0</p>
+            <p className="text-gray-400">v1.1.0</p>
           </div>
           <Button
             onClick={() => {
