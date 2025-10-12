@@ -1,12 +1,25 @@
 import React, { useEffect, useState } from "react";
 import Card from "../components/ui/Card";
-import { Plus, Users, Zap } from "lucide-react";
+import {
+  Plus,
+  Trash,
+  Trash2,
+  Trash2Icon,
+  TrashIcon,
+  Users,
+  Zap,
+} from "lucide-react";
 import Button from "../components/ui/Button";
 import { useAuthContext } from "../contexts/AuthContext";
 import LoadingSpinner from "../components/LoadingSpinner";
 import { useNavigate } from "react-router-dom";
 import Input from "../components/ui/Input";
-import { createRoomAsync, useRoom } from "../hooks/useRoom";
+import {
+  createRoomAsync,
+  useRoom,
+  useRooms,
+  deleteRoom,
+} from "../hooks/useRoom";
 
 function HomePage() {
   const {
@@ -16,15 +29,29 @@ function HomePage() {
     logout,
   } = useAuthContext();
 
-  const { rooms, loading: roomsLoading } = useRoom();
+  const { room, loading: roomLoading } = useRoom();
+  const { rooms, loading: roomsListLoading } = useRooms();
   const [topic, setTopic] = useState("");
   const [roomCode, setRoomCode] = useState("");
   const [isCreating, setIsCreating] = useState(false);
   const navigate = useNavigate();
+  const [setshowRoomCreateJoin, setSetshowRoomCreateJoin] = useState(true);
 
   useEffect(() => {
     console.log("🚀 ~ HomePage ~ user:", user);
   }, [user]);
+
+  useEffect(() => {
+    console.log("🚀 ~ HomePage ~ rooms:", rooms);
+    if (rooms && rooms.length > 0 && user) {
+      const myRoom = rooms.find((r) => r.hostId === user.uid);
+      if (myRoom) {
+        setSetshowRoomCreateJoin(false);
+      } else {
+        setSetshowRoomCreateJoin(true);
+      }
+    }
+  }, [rooms]);
 
   const handleCreateRoom = async () => {
     if (!topic.trim()) return;
@@ -46,6 +73,12 @@ function HomePage() {
     }
   };
 
+  const handleDeleteRoom = (roomId) => {
+    // Implement room deletion logic here
+    console.log("Delete room with ID:", roomId);
+    deleteRoom(roomId);
+  };
+
   if (authLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-900 via-purple-900 to-indigo-900 flex items-center justify-center">
@@ -64,6 +97,7 @@ function HomePage() {
             <p className="text-gray-300">
               Challenge friends in AI-powered quiz battles!
             </p>
+            <p className="text-gray-400">v1.0.0</p>
           </div>
           <Button
             onClick={() => {
@@ -94,59 +128,61 @@ function HomePage() {
           </a>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-8 max-w-7xl w-full self-center h-auto">
-          {/* Create Room */}
-          <Card className="p-6">
-            <h2 className="text-2xl font-bold text-white mb-4 flex items-center">
-              <Plus className="w-6 h-6 mr-2" />
-              Create Room
-            </h2>
-            <div className="space-y-4">
-              <Input
-                placeholder="Enter a topic for your quiz..."
-                value={topic}
-                onChange={(e) => setTopic(e.target.value)}
-                className="w-full"
-              />
-              <Button
-                onClick={handleCreateRoom}
-                disabled={!topic.trim() || isCreating}
-                className="w-full bg-green-600 hover:bg-green-700"
-              >
-                {isCreating ? "Creating..." : "Create Room"}
-              </Button>
-            </div>
-          </Card>
-          {/* Join Room */}
-          <Card className="p-6">
-            <h2 className="text-2xl font-bold text-white mb-4 flex items-center">
-              <Users className="w-6 h-6 mr-2" />
-              Join Room
-            </h2>
-            <div className="space-y-4">
-              <Input
-                placeholder="Enter room code..."
-                value={roomCode}
-                onChange={(e) => setRoomCode(e.target.value)}
-                className="w-full"
-              />
-              <Button
-                onClick={handleJoinRoom}
-                disabled={!roomCode.trim()}
-                className="w-full bg-blue-600 hover:bg-blue-700"
-              >
+        {setshowRoomCreateJoin && (
+          <div className="grid md:grid-cols-2 gap-8 max-w-7xl w-full self-center h-auto">
+            {/* Create Room */}
+            <Card className="p-6">
+              <h2 className="text-2xl font-bold text-white mb-4 flex items-center">
+                <Plus className="w-6 h-6 mr-2" />
+                Create Room
+              </h2>
+              <div className="space-y-4">
+                <Input
+                  placeholder="Enter a topic for your quiz..."
+                  value={topic}
+                  onChange={(e) => setTopic(e.target.value)}
+                  className="w-full"
+                />
+                <Button
+                  onClick={handleCreateRoom}
+                  disabled={!topic.trim() || isCreating}
+                  className="w-full bg-green-600 hover:bg-green-700"
+                >
+                  {isCreating ? "Creating..." : "Create Room"}
+                </Button>
+              </div>
+            </Card>
+            {/* Join Room */}
+            <Card className="p-6">
+              <h2 className="text-2xl font-bold text-white mb-4 flex items-center">
+                <Users className="w-6 h-6 mr-2" />
                 Join Room
-              </Button>
-            </div>
-          </Card>
-        </div>
+              </h2>
+              <div className="space-y-4">
+                <Input
+                  placeholder="Enter room code..."
+                  value={roomCode}
+                  onChange={(e) => setRoomCode(e.target.value)}
+                  className="w-full"
+                />
+                <Button
+                  onClick={handleJoinRoom}
+                  disabled={!roomCode.trim()}
+                  className="w-full bg-blue-600 hover:bg-blue-700"
+                >
+                  Join Room
+                </Button>
+              </div>
+            </Card>
+          </div>
+        )}
 
         {/* Available Rooms */}
         <div className="mt-12">
           <h2 className="text-2xl font-bold text-white mb-6 text-center">
             Available Rooms
           </h2>
-          {roomsLoading ? (
+          {roomsListLoading ? (
             <LoadingSpinner />
           ) : (
             <div className="grid gap-4 max-w-2xl mx-auto">
@@ -160,8 +196,7 @@ function HomePage() {
                 rooms.map((room) => (
                   <Card
                     key={room.id}
-                    className="p-4 hover:bg-gray-800 transition-colors cursor-pointer"
-                    onClick={() => navigate(`/room/${room.id}`)}
+                    className="p-4 hover:bg-gray-800 transition-colors "
                   >
                     <div className="flex justify-between items-center">
                       <div>
@@ -169,15 +204,31 @@ function HomePage() {
                           {room.hostTopic}
                         </h3>
                         <p className="text-gray-400 text-sm">
+                          {room.hostId === user.uid &&
+                            "Come back to your room. "}
                           Waiting for opponent...
                         </p>
                       </div>
                       <Button
                         size="sm"
-                        className="bg-blue-600 hover:bg-blue-700"
+                        className={
+                          room.hostId === user.uid
+                            ? " bg-green-600 hover:bg-green-700 cursor-pointer"
+                            : "bg-blue-600 hover:bg-blue-700 cursor-pointer"
+                        }
+                        onClick={() => navigate(`/room/${room.id}`)}
                       >
                         Join
                       </Button>
+                      {room.hostId === user.uid && (
+                        <Trash2Icon
+                          className="w-5 h-5 text-red-500 hover:text-red-700 cursor-pointer"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteRoom(room.id);
+                          }}
+                        />
+                      )}
                     </div>
                   </Card>
                 ))
