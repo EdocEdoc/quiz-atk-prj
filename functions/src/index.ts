@@ -139,9 +139,10 @@ async function generateLectureAndQuiz(topic: string): Promise<LectureData> {
   const prompt = `You are Quiz Attack assistant. Given this topic, generate a short lecture (2-5 min read) and exactly 15 multiple-choice questions.
   Question should have 4 answer choices, with one correct answer. The questions should be challenging but fair, testing key concepts from the lecture.
   Questions should scale in difficulty, starting easier and getting harder.
+  Lecture should not contain any introductory or concluding remarks, just the educational content.
 
   Topic: "${topic}"
-  
+
   Return JSON in this exact format (no markdown, no explanation):
 {
   "topic": "${topic}",
@@ -157,7 +158,8 @@ async function generateLectureAndQuiz(topic: string): Promise<LectureData> {
 }
 
 Make sure the lecture is educational and engaging, and the questions test understanding of the material.
-STRICTLY Only output the JSON — no extra text or markdown.`;
+STRICTLY Only output the VALID JSON — no extra text or markdown.
+STRICTLY Ensure the JSON is properly formatted and can be parsed.`;
 
   const model = genAI.getGenerativeModel({ model: aiModel });
   const result = await model.generateContent(prompt);
@@ -188,8 +190,8 @@ STRICTLY Only output the JSON — no extra text or markdown.`;
     }
 
     // Ensure we have exactly 10 questions
-    if (data.quizList.length !== 10) {
-      throw new Error("Expected exactly 10 questions");
+    if (data.quizList.length !== 15) {
+      throw new Error("Expected exactly 15 questions");
     }
 
     // Validate each question
@@ -308,9 +310,7 @@ export const processAnswer = onCall<ProcessAnswerData>(async (request) => {
     }
 
     const isCorrect = answerIndex === question.answerIndex;
-    const isAttacker = room?.currentAction
-      ? true
-      : room?.currentAction === "attack";
+    const isAttacker = room?.currentAction === "attack";
     const enemy: { host: "guest"; guest: "host" } = {
       host: "guest",
       guest: "host",
