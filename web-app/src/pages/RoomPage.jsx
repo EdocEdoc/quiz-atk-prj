@@ -17,7 +17,7 @@ function RoomPage() {
   const [isJoining, setIsJoining] = useState(false);
   const navigate = useNavigate();
 
-  const MAX_TOPIC_LENGTH = 100; 
+  const MAX_TOPIC_LENGTH = 100;
 
   useEffect(() => {
     if (room && room.status === GAME_STATUS.BATTLE) {
@@ -146,25 +146,9 @@ function RoomPage() {
                 <div className="space-y-4">
                   <div>
                     <label className="block text-gray-300 text-sm mb-2">
-                      Your Topic ({guestTopic.length}/{MAX_TOPIC_LENGTH})
+                      Topic
                     </label>
-                    <Input
-                      placeholder="Enter your topic..."
-                      value={guestTopic}
-                      onChange={(e) => {
-                          const value = e.target.value;
-                          if (value.length <= MAX_TOPIC_LENGTH) {
-                          setGuestTopic(value);
-                              }
-
-                      }}
-                      maxLength={MAX_TOPIC_LENGTH}
-                    />
-                    {guestTopic.length >= MAX_TOPIC_LENGTH && (
-                    <p className="text-yellow-400 text-xs mt-1">
-                    Maximum character limit reached
-                    </p>
-                      )}
+                    <p className="text-white font-medium">{room.hostTopic}</p>
                   </div>
                   <div>
                     <label className="block text-gray-300 text-sm mb-2">
@@ -187,13 +171,23 @@ function RoomPage() {
                 <div className="space-y-4">
                   <div>
                     <label className="block text-gray-300 text-sm mb-2">
-                      Your Topic
+                      Your Topic ({guestTopic.length}/{MAX_TOPIC_LENGTH})
                     </label>
                     <Input
                       placeholder="Enter your topic..."
                       value={guestTopic}
-                      onChange={(e) => setGuestTopic(e.target.value)}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        if (value.length <= MAX_TOPIC_LENGTH) {
+                          setGuestTopic(value);
+                        }
+                      }}
                     />
+                    {guestTopic.length >= MAX_TOPIC_LENGTH && (
+                      <p className="text-yellow-400 text-xs mt-1">
+                        Maximum character limit reached
+                      </p>
+                    )}
                   </div>
                   <Button
                     onClick={handleJoinRoom}
