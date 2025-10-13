@@ -16,8 +16,6 @@ export const useAuth = () => {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
-        console.log("🚀 ~ useAuth ~ user:", user);
-
         setUser(user);
         // Check if user document exists, create if not
         try {

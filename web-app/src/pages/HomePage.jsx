@@ -40,11 +40,6 @@ function HomePage() {
   const [setshowRoomCreateJoin, setSetshowRoomCreateJoin] = useState(true);
 
   useEffect(() => {
-    console.log("🚀 ~ HomePage ~ user:", user);
-  }, [user]);
-
-  useEffect(() => {
-    console.log("🚀 ~ HomePage ~ rooms:", rooms);
     if (rooms && rooms.length > 0 && user) {
       const myRoom = rooms.find((r) => r.hostId === user.uid);
       if (myRoom) {
@@ -99,7 +94,7 @@ function HomePage() {
             <p className="text-gray-300">
               Challenge friends in AI-powered quiz battles!
             </p>
-            <p className="text-gray-400">v1.1.0</p>
+            <p className="text-gray-400">v1.2.0</p>
           </div>
           <Button
             onClick={() => {

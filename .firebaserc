@@ -1,5 +1,8 @@
 {
   "projects": {
-    "default": "quiz-atk-prj"
-  }
+    "default": "qz-atk-prj",
+    "staging": "qz-atk-prj"
+  },
+  "targets": {},
+  "etags": {}
 }

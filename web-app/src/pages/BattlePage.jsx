@@ -36,7 +36,6 @@ function BattlePage() {
 
   const submitAnswer = async () => {
     const appToken = import.meta.env.VITE_PRIVATE_API_KEY;
-    console.log("🚀 ~ submitAnswer ~ token:", appToken);
 
     if (
       !roomId ||
@@ -60,7 +59,6 @@ function BattlePage() {
         apiKey: appToken,
       });
 
-      console.log("🚀 ~ submitAnswer ~ result.data:", result.data);
       if (result.data) {
         // Move to next question or end battle
         if (currentQuestionIndex < room.quizList.length - 1) {
