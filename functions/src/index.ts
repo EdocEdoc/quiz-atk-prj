@@ -203,8 +203,6 @@ Lecture should not contain any introductory or concluding remarks, just the educ
 
 Topic: "${topic}"
 
-STRICTLY represent all mathematical formulas, equations, and expressions using **LaTeX syntax**.
-
 Make sure the lecture is educational and engaging, and the questions test understanding of the material.
 STRICTLY Only output the JSON object that conforms to the provided schema.`;
 
