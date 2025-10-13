@@ -148,7 +148,7 @@ function RoomPage() {
                     <label className="block text-gray-300 text-sm mb-2">
                       Topic
                     </label>
-                    <p className="text-white font-medium">{room.hostTopic}</p>
+                    <p className="text-white font-medium">{room.guestTopic}</p>
                   </div>
                   <div>
                     <label className="block text-gray-300 text-sm mb-2">
