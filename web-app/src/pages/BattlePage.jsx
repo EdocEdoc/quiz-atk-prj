@@ -13,7 +13,7 @@ import { getFunctions, httpsCallable } from "firebase/functions";
 function BattlePage() {
   const { roomId } = useParams();
   const { user } = useAuthContext();
-  const { room, loading, error } = useRoom(roomId);
+  const { room, loading, error, battleLogs } = useRoom(roomId);
   const [selectedAnswer, setSelectedAnswer] = useState(null);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [battleLog, setBattleLog] = useState([]);
@@ -167,7 +167,7 @@ function BattlePage() {
           </div>
 
           {/* Battle Stats */}
-          <div className="grid md:grid-cols-2 gap-6 mb-8">
+          <div className="grid md:grid-cols-2 gap-6 mb-8 items-start">
             {/* Host Stats */}
             <Card className="p-6">
               <div className="flex items-center justify-between mb-4">
@@ -207,7 +207,7 @@ function BattlePage() {
             </Card>
 
             {/* Question Card */}
-            <Card className="p-8 mb-8">
+            <Card className="p-8 mb-8 shrink ">
               <div className="text-center mb-6">
                 <h2 className="text-2xl font-bold text-white mb-4">
                   {currentQuestion?.question || "Loading question..."}
@@ -277,26 +277,37 @@ function BattlePage() {
             </Card>
 
             {/* Battle Log */}
-            {battleLog && battleLog.length > 0 && (
-              <Card className="p-6">
+            {battleLogs && battleLogs.length > 0 && (
+              <Card className="p-6 ">
                 <h3 className="text-xl font-bold text-white mb-4">
                   Battle Log
                 </h3>
-                <div className="space-y-2 max-h-40 overflow-y-auto">
-                  {battleLog.map((log, index) => (
+                <div className="space-y-2 max-h-svh overflow-y-auto">
+                  {battleLogs.map((log, index) => (
                     <div
                       key={index}
-                      className="flex items-center justify-between p-2 bg-gray-700 rounded"
+                      className="flex items-center justify-between p-2 bg-gray-700 rounded "
                     >
-                      <span className="text-gray-300 text-sm">
-                        {log.isAttacker ? "⚔️" : "🛡️"} {log.question}
-                      </span>
+                      <div>
+                        <span className="text-gray-300 text-sm">
+                          {log.isAttacker ? "⚔️" : "🛡️"}{" "}
+                          {room?.quizList[log.questionIndex]?.question ||
+                            "Question"}{" "}
+                        </span>
+                        <p className="text-sm text-gray-500">
+                          {log?.timestamp
+                            ? log.timestamp.toDate
+                              ? log.timestamp.toDate().toISOString() // Firestore Timestamp
+                              : new Date(log.timestamp).toISOString() // ms or ISO string
+                            : " "}
+                        </p>
+                      </div>
                       <span
                         className={`text-sm font-medium ${
-                          log.correct ? "text-green-400" : "text-red-400"
+                          log.isCorrect ? "text-green-400" : "text-red-400"
                         }`}
                       >
-                        {log.correct ? "✓" : "✗"}{" "}
+                        {log.isCorrect ? "✓" : "✗"}{" "}
                         {log.damage > 0 ? `+${log.damage} damage` : ""}
                       </span>
                     </div>

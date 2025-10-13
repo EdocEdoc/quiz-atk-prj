@@ -18,6 +18,7 @@ export const useRoom = (roomId) => {
   const [room, setRoom] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [battleLogs, setBattleLogs] = useState(null);
 
   useEffect(() => {
     if (!roomId) {
@@ -46,7 +47,48 @@ export const useRoom = (roomId) => {
     return () => unsubscribe();
   }, [roomId]);
 
-  return { room, loading, error };
+  useEffect(() => {
+    let unsubscribeBattleLogs = null;
+
+    if (room && room.status === GAME_STATUS.BATTLE) {
+      const battleLogsRef = collection(db, "rooms", room.id, "battleLog");
+      unsubscribeBattleLogs = onSnapshot(
+        battleLogsRef,
+        (snapshot) => {
+          const logs = snapshot.docs.map((doc) => ({
+            id: doc.id,
+            ...doc.data(),
+          }));
+          // 🔹 Sort by timestamp descending (latest first)
+          const sortedLogs = logs.sort((a, b) => {
+            const aTime = a.timestamp?.toMillis
+              ? a.timestamp.toMillis()
+              : a.timestamp;
+            const bTime = b.timestamp?.toMillis
+              ? b.timestamp.toMillis()
+              : b.timestamp;
+            return bTime - aTime; // 👈 reversed order
+          });
+
+          setBattleLogs(sortedLogs);
+        },
+        (err) => {
+          console.error("Error listening to battleLogs:", err);
+          setError(err.message);
+        }
+      );
+    } else {
+      // Clear logs when leaving battle phase
+      setBattleLogs([]);
+    }
+
+    // Clean up listener
+    return () => {
+      if (unsubscribeBattleLogs) unsubscribeBattleLogs();
+    };
+  }, [room]);
+
+  return { room, battleLogs, loading, error };
 };
 
 export const useRooms = () => {
