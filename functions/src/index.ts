@@ -13,17 +13,67 @@ import * as admin from "firebase-admin";
 import * as logger from "firebase-functions/logger";
 import * as dotenv from "dotenv";
 import * as functions from "firebase-functions";
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenAI } from "@google/genai";
 
 dotenv.config();
 
 admin.initializeApp();
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
+const genAI = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
 
 setGlobalOptions({ maxInstances: 10 });
 
 const aiModel = "gemini-2.5-flash-lite";
+
+const quizSchema = {
+  type: "object",
+  properties: {
+    topic: {
+      type: "string",
+      description: "The topic of the quiz and lecture.",
+    },
+    lecture: {
+      type: "string",
+      description:
+        "The short lecture content (2-5 minute read) without introductory or concluding remarks.",
+    },
+    quizList: {
+      type: "array",
+      description: "An array of exactly 15 multiple-choice questions.",
+      items: {
+        type: "object",
+        properties: {
+          question: {
+            type: "string",
+            description: "The question text.",
+          },
+          choices: {
+            type: "array",
+            description: "Exactly 4 answer choices.",
+            items: {
+              type: "string",
+            },
+          },
+          answerIndex: {
+            type: "integer",
+            description: "The zero-based index of the correct choice (0 to 3).",
+          },
+          id: {
+            type: "string",
+            description: "A unique identifier for the question, e.g., 'q1'.",
+          },
+        },
+        required: ["question", "choices", "answerIndex", "id"],
+      },
+    },
+  },
+  required: ["topic", "lecture", "quizList"],
+};
+
+/* const LectureDeclaration: FunctionDeclaration = {
+  name: "lectureResut",
+  parametersJsonSchema: quizSchema,
+}; */
 
 // Types
 interface QuizQuestion {
@@ -101,10 +151,24 @@ Guest Topic: "${guestTopic}"
 
 Return only the combined topic as a single sentence, no additional text.`;
 
-    const model = genAI.getGenerativeModel({ model: aiModel });
+    /* const model = genAI.getGenerativeModel({ model: aiModel });
     const result = await model.generateContent(prompt);
     const response = result.response;
-    const text = response.text();
+    const text = response.text(); */
+
+    const response = await genAI.models
+      .generateContent({
+        model: aiModel,
+        contents: prompt,
+      })
+      .catch((e) => {
+        logger.error("generateCombinedTopic error name: ", e.name);
+        logger.error("generateCombinedTopic error message: ", e.message);
+        logger.error("generateCombinedTopic error status: ", e.status);
+      });
+
+    const text = response?.text;
+    logger.log("Combined topic response:", text);
 
     return text?.trim() || `${hostTopic} and ${guestTopic}`;
   } catch (error) {
@@ -133,48 +197,45 @@ export const helloWorld = onRequest((request, response) => {
 // Helper function to generate lecture and quiz
 async function generateLectureAndQuiz(topic: string): Promise<LectureData> {
   const prompt = `You are Quiz Attack assistant. Given this topic, generate a short lecture (2-5 min read) and exactly 15 multiple-choice questions.
-  Question should have 4 answer choices, with one correct answer. The questions should be challenging but fair, testing key concepts from the lecture.
-  Questions should scale in difficulty, starting easier and getting harder.
-  Lecture should not contain any introductory or concluding remarks, just the educational content.
+Questions should have 4 answer choices, with one correct answer. The questions should be challenging but fair, testing key concepts from the lecture.
+Questions should scale in difficulty, starting easier and getting harder.
+Lecture should not contain any introductory or concluding remarks, just the educational content.
 
-  Topic: "${topic}"
+Topic: "${topic}"
 
-  Return JSON in this exact format (no markdown, no explanation):
-{
-  "topic": "${topic}",
-  "lecture": "Your lecture content here...",
-  "quizList": [
-    {
-      "question": "Question 1?",
-      "choices": ["Option 1", "Option 2", "Option 3", "Option 4"],
-      "answerIndex": 0,
-      "id": "q1"
-    }
-  ]
-}
+STRICTLY represent all mathematical formulas, equations, and expressions using **LaTeX syntax**.
 
 Make sure the lecture is educational and engaging, and the questions test understanding of the material.
-STRICTLY Only output the VALID JSON — no extra text or markdown.
-STRICTLY Ensure the JSON is properly formatted and can be parsed.`;
+STRICTLY Only output the JSON object that conforms to the provided schema.`;
 
-  const model = genAI.getGenerativeModel({ model: aiModel });
-  const result = await model.generateContent(prompt);
-  const response = result.response;
-  let content = response.text();
+  const generationConfig = {
+    responseMimeType: "application/json",
+    responseSchema: quizSchema,
+  };
 
-  content = content
-    .replace(/```json/g, "")
-    .replace(/```/g, "")
-    .trim();
+  const result = await genAI.models.generateContent({
+    model: aiModel,
+    contents: prompt,
+    config: generationConfig,
+  });
+
+  logger.log("genAI.models.generateContent res: ", result);
+
+  const content = result.text ? result.text.trim() : "";
+
+  if (!content) {
+    throw new Error("No response from Gemini");
+  }
 
   if (!content) {
     throw new Error("No response from Gemini");
   }
 
   try {
-    let data;
+    let data = null;
     try {
       data = JSON.parse(content);
+      logger.log("Parsed function call data:", data);
     } catch (err) {
       logger.error("Invalid JSON from model:", content);
       throw new Error("Model response was not valid JSON.");
