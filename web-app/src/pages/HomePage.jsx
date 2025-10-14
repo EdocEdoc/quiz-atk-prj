@@ -1,14 +1,6 @@
 import React, { useEffect, useState } from "react";
 import Card from "../components/ui/Card";
-import {
-  Plus,
-  Trash,
-  Trash2,
-  Trash2Icon,
-  TrashIcon,
-  Users,
-  Zap,
-} from "lucide-react";
+import { Plus, Trash2Icon, Users, Zap } from "lucide-react";
 import Button from "../components/ui/Button";
 import { useAuthContext } from "../contexts/AuthContext";
 import LoadingSpinner from "../components/LoadingSpinner";
@@ -78,15 +70,17 @@ function HomePage() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-900 via-purple-900 to-indigo-900 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <LoadingSpinner size="xl" />
       </div>
     );
   }
 
+  /* return <Battlefield />; */
+
   if (!user) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-900 via-purple-900 to-indigo-900 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <Card className="w-full max-w-md p-8 text-center">
           <div className="mb-6">
             <Zap className="w-16 h-16 text-yellow-400 mx-auto mb-4" />
@@ -94,7 +88,7 @@ function HomePage() {
             <p className="text-gray-300">
               Challenge friends in AI-powered quiz battles!
             </p>
-            <p className="text-gray-400">v1.2.0</p>
+            <p className="text-gray-400">v1.3.0</p>
           </div>
           <Button
             onClick={() => {
@@ -111,7 +105,7 @@ function HomePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-900 via-purple-900 to-indigo-900">
+    <div className="min-h-screen">
       <div className="flex flex-col justify-center gap-10 align-middle min-h-screen mx-auto px-4 py-8">
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-white mb-2">Quiz Attack</h1>
@@ -131,40 +125,40 @@ function HomePage() {
             <Card className="p-6">
               <h2 className="text-2xl font-bold text-white mb-4 flex items-center">
                 <Plus className="w-6 h-6 mr-2" />
-                  Create Room
+                Create Room
               </h2>
-          <div className="space-y-4">
-          <div>
-            <label className="block text-gray-300 text-sm mb-2">
-              Topic ({topic.length}/{MAX_TOPIC_LENGTH})
-            </label>
-              <Input
-              placeholder="Enter a topic for your quiz..."
-              value={topic}
-              onChange={(e) => {
-              const value = e.target.value;
-                if (value.length <= MAX_TOPIC_LENGTH) {
-                  setTopic(value);
-                  }
-                }}
-              maxLength={MAX_TOPIC_LENGTH}
-              className="w-full"
-              />
-              {topic.length >= MAX_TOPIC_LENGTH && (
-              <p className="text-yellow-400 text-xs mt-1">
-              Maximum character limit reached
-              </p>
-              )}
-          </div>
-          <Button
-            onClick={handleCreateRoom}
-            disabled={!topic.trim() || isCreating}
-            className="w-full bg-green-600 hover:bg-green-700"
-          >
-            {isCreating ? "Creating..." : "Create Room"}
-          </Button>
-          </div>
-      </Card>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-gray-300 text-sm mb-2">
+                    Topic ({topic.length}/{MAX_TOPIC_LENGTH})
+                  </label>
+                  <Input
+                    placeholder="Enter a topic for your quiz..."
+                    value={topic}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      if (value.length <= MAX_TOPIC_LENGTH) {
+                        setTopic(value);
+                      }
+                    }}
+                    maxLength={MAX_TOPIC_LENGTH}
+                    className="w-full"
+                  />
+                  {topic.length >= MAX_TOPIC_LENGTH && (
+                    <p className="text-yellow-400 text-xs mt-1">
+                      Maximum character limit reached
+                    </p>
+                  )}
+                </div>
+                <Button
+                  onClick={handleCreateRoom}
+                  disabled={!topic.trim() || isCreating}
+                  className="w-full bg-green-600 hover:bg-green-700"
+                >
+                  {isCreating ? "Creating..." : "Create Room"}
+                </Button>
+              </div>
+            </Card>
             {/* Join Room */}
             <Card className="p-6">
               <h2 className="text-2xl font-bold text-white mb-4 flex items-center">
