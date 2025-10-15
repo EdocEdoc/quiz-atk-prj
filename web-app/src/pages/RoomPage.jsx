@@ -98,7 +98,7 @@ function RoomPage() {
           <div className="w-20"></div>
         </div>
         {/* Room Content */}
-        <div className="grid md:grid-cols-2 gap-8">
+        <div className="grid md:grid-cols-2 gap-8 items-start">
           {/* Host Section */}
           <Card className="p-6">
             <div className="flex">

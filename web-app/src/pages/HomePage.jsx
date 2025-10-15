@@ -88,7 +88,7 @@ function HomePage() {
             <p className="text-gray-300">
               Challenge friends in AI-powered quiz battles!
             </p>
-            <p className="text-gray-400">v1.3.0</p>
+            <p className="text-gray-400">v1.3.1</p>
           </div>
           <Button
             onClick={() => {
@@ -120,7 +120,7 @@ function HomePage() {
         </div>
 
         {setshowRoomCreateJoin && (
-          <div className="grid md:grid-cols-2 gap-8 max-w-7xl w-full self-center h-auto">
+          <div className="grid md:grid-cols-2 gap-8 max-w-7xl w-full self-center h-auto items-start">
             {/* Create Room */}
             <Card className="p-6">
               <h2 className="text-2xl font-bold text-white mb-4 flex items-center">
@@ -220,7 +220,7 @@ function HomePage() {
                         size="sm"
                         className={
                           room.hostId === user.uid
-                            ? " bg-green-600 hover:bg-green-700 cursor-pointer"
+                            ? " bg-green-600 hover:bg-green-700 cursor-pointer ml-10"
                             : "bg-blue-600 hover:bg-blue-700 cursor-pointer"
                         }
                         onClick={() => navigate(`/room/${room.id}`)}
@@ -229,7 +229,7 @@ function HomePage() {
                       </Button>
                       {room.hostId === user.uid && (
                         <Trash2Icon
-                          className="w-5 h-5 text-red-500 hover:text-red-700 cursor-pointer"
+                          className="w-5 h-5 text-red-500 hover:text-red-700 cursor-pointer ml-10"
                           onClick={(e) => {
                             e.stopPropagation();
                             handleDeleteRoom(room.id);

@@ -229,7 +229,7 @@ function BattlePage() {
             <Card>
               <div className="flex flex-col py-2 px-4">
                 <h3 className="text-xl font-bold text-white text-center">
-                  🦸‍♂️ {currentUserConfig.name.toLocaleUpperCase()}
+                  🦸‍♂️ YOU
                 </h3>
                 <div className="h-2 bg-gray-300 rounded mt-1">
                   <motion.div
