@@ -123,7 +123,7 @@ function HomePage() {
             <p className="text-gray-300">
               Challenge friends in AI-powered quiz battles!
             </p>
-            <p className="text-gray-400">v1.3.1</p>
+            <p className="text-gray-400">v1.4.1</p>
           </div>
           <Button
             onClick={() => {

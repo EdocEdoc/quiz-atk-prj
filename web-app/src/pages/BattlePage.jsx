@@ -21,6 +21,8 @@ import bgBattleMusic from "../assets/bgBattleMusic.mp3";
 import healingEffect from "../assets/healing.mp3";
 import attackedEffect from "../assets/attacked.mp3";
 
+import useTimer from "../hooks/useTimer";
+
 function BattlePage() {
   const { roomId } = useParams();
   const { user } = useAuthContext();
@@ -30,6 +32,7 @@ function BattlePage() {
   const [battleLog, setBattleLog] = useState([]);
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
+  const { timeLeft, status, start, stop, reset } = useTimer(20);
 
   const bgInstance = useBackgroundMusic(bgBattleMusic, {
     loop: true,
@@ -45,6 +48,21 @@ function BattlePage() {
       console.log("🚀 ~ Battle ~ unmount");
     };
   }, []);
+
+  useEffect(() => {
+    if (status === "idle") {
+      start();
+    }
+
+    if (status !== "ended") return;
+    const isHost = room.hostId === user.uid;
+    const isMyTurn =
+      (room.currentTurn === "host" && isHost) ||
+      (room.currentTurn === "guest" && !isHost);
+    if (!isMyTurn) return;
+
+    submitAnswer(99);
+  }, [status]);
 
   const youAre = room?.hostId == user?.uid ? "host" : "guest";
 
@@ -69,6 +87,8 @@ function BattlePage() {
   useEffect(() => {
     if (!room?.hp) return;
 
+    reset();
+    start();
     const prevHP = prevRoomHPRef.current;
     const currHP = room.hp;
 
@@ -131,33 +151,66 @@ function BattlePage() {
   }, [room, roomId, navigate]);
 
   const handleAnswerSelect = (answerIndex) => {
+    if (
+      answerIndex &&
+      typeof answerIndex === "object" &&
+      answerIndex.nativeEvent
+    ) {
+      console.warn("submitAnswer called with event instead of index");
+      return;
+    }
     setSelectedAnswer(answerIndex);
   };
 
-  const submitAnswer = async () => {
+  const submitAnswer = async (paramForceAnswerIndex = null) => {
+    console.log(
+      "🚀 ~ submitAnswer ~ paramForceAnswerIndex:",
+      paramForceAnswerIndex
+    );
+    let forceAnswerIndex = null;
+
+    if (
+      paramForceAnswerIndex &&
+      typeof paramForceAnswerIndex === "object" &&
+      paramForceAnswerIndex.nativeEvent
+    ) {
+      forceAnswerIndex = null;
+    } else {
+      forceAnswerIndex = paramForceAnswerIndex;
+    }
+
+    if (isLoading) return;
+
     const appToken = import.meta.env.VITE_PRIVATE_API_KEY;
 
     if (
       !roomId ||
       !user ||
       !appToken ||
-      selectedAnswer === null ||
+      (selectedAnswer === null && forceAnswerIndex === null) ||
       currentQuestionIndex === null
     ) {
       console.warn("Missing data for submitAnswer");
       return;
     }
-
+    setIsLoading(true);
     try {
       const functions = getFunctions();
       const processAnswer = httpsCallable(functions, "processAnswer");
 
-      const result = await processAnswer({
+      const SubmitData = {
         roomId,
         questionIndex: currentQuestionIndex,
-        answerIndex: selectedAnswer,
+        answerIndex: selectedAnswer
+          ? selectedAnswer
+          : forceAnswerIndex
+          ? forceAnswerIndex
+          : 99,
         apiKey: appToken,
-      });
+      };
+      console.log("🚀 ~ submitAnswer ~ SubmitData:", SubmitData);
+
+      const result = await processAnswer(SubmitData);
 
       if (result.data) {
         // Move to next question or end battle
@@ -171,10 +224,15 @@ function BattlePage() {
       }
     } catch (error) {
       console.error("❌ Error submitting answer:", error);
+    } finally {
+      setIsLoading(false);
+      reset();
+      start();
+      setSelectedAnswer(null);
     }
   };
 
-  const handleSubmitAnswer = async () => {
+  /* const handleSubmitAnswer = async () => {
     if (selectedAnswer === null) return;
     setIsLoading(true);
     // This would typically call a Cloud Function to process the answer
@@ -206,7 +264,7 @@ function BattlePage() {
       navigate(`/room/${roomId}`);
     }
     setIsLoading(false);
-  };
+  }; */
 
   if (loading) {
     return (
@@ -274,16 +332,19 @@ function BattlePage() {
             </Card>
           </div>
         </div>
-        <div className="order-3 w-full md:order-2 md:grow p-4 flex flex-col items-center gap-4 h-fulljustify-center">
+        <div className="order-3 w-full md:order-2 md:grow p-4 flex flex-col items-center gap-4 h-full justify-center">
           {/* Question Card */}
           <div className="px-10">
-            <div className="text-center mb-6">
+            <div className="text-center mb-6 flex flex-col justify-center">
               <h2 className="text-2xl font-bold text-white mb-4">
                 {currentQuestion?.question || "Loading question..."}
               </h2>
+              <p className="text-sm mt-[-20px] mb-[-10px]">
+                {timeLeft || status.toUpperCase()}
+              </p>
             </div>
 
-            {!isLoading && currentQuestion && (
+            {currentQuestion && (
               <div className="grid gap-4 max-w-2xl mx-auto">
                 {currentQuestion.choices.map((choice, index) => (
                   <Button
@@ -309,7 +370,7 @@ function BattlePage() {
               <div className="text-center mt-6">
                 <Button
                   onClick={submitAnswer}
-                  disabled={selectedAnswer === null}
+                  disabled={selectedAnswer === null || isLoading}
                   className={
                     room?.currentAction === "defend"
                       ? "bg-green-600 hover:bg-green-700 text-lg px-8 py-3"
