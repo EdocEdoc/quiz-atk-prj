@@ -12,6 +12,10 @@ import {
   useRooms,
   deleteRoom,
 } from "../hooks/useRoom";
+import useBackgroundMusic from "../hooks/useBackgroundMusic";
+import { setBackgroundMusicInstance } from "../utils/soundManager";
+
+import bgMusic from "../assets/bgMusic.mp3";
 
 const MAX_TOPIC_LENGTH = 100;
 
@@ -30,6 +34,37 @@ function HomePage() {
   const [isCreating, setIsCreating] = useState(false);
   const navigate = useNavigate();
   const [setshowRoomCreateJoin, setSetshowRoomCreateJoin] = useState(true);
+
+  const bgInstance = useBackgroundMusic(bgMusic, { loop: true, volume: 0.2 });
+
+  /* useEffect(() => {
+    const sound = new Howl({
+      src: [bgMusic],
+      loop: true,
+      volume: 0.2,
+      html5: true,
+    });
+    setMusic(sound);
+  }, []);
+ */
+  /* useEffect(() => {
+    if (music) {
+      const startMusic = () => {
+        music.play();
+        window.removeEventListener("click", startMusic);
+      };
+      window.addEventListener("click", startMusic);
+    }
+  }, []); */
+
+  useEffect(() => {
+    if (bgInstance) {
+      setBackgroundMusicInstance(bgInstance);
+    }
+    return () => {
+      console.log("🚀 ~ HomePage ~ unmount");
+    };
+  }, []);
 
   useEffect(() => {
     if (rooms && rooms.length > 0 && user) {

@@ -14,6 +14,13 @@ import bluechar from "../assets/bluechar.png";
 import { motion } from "framer-motion";
 import GlowingCharacter from "../components/GlowingCharacter";
 
+import useBackgroundMusic from "../hooks/useBackgroundMusic";
+import { playEffect, setBackgroundMusicInstance } from "../utils/soundManager";
+
+import bgBattleMusic from "../assets/bgBattleMusic.mp3";
+import healingEffect from "../assets/healing.mp3";
+import attackedEffect from "../assets/attacked.mp3";
+
 function BattlePage() {
   const { roomId } = useParams();
   const { user } = useAuthContext();
@@ -23,6 +30,21 @@ function BattlePage() {
   const [battleLog, setBattleLog] = useState([]);
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
+
+  const bgInstance = useBackgroundMusic(bgBattleMusic, {
+    loop: true,
+    volume: 0.2,
+  });
+
+  useEffect(() => {
+    if (bgInstance) {
+      setBackgroundMusicInstance(bgInstance);
+    }
+
+    return () => {
+      console.log("🚀 ~ Battle ~ unmount");
+    };
+  }, []);
 
   const youAre = room?.hostId == user?.uid ? "host" : "guest";
 
@@ -62,18 +84,22 @@ function BattlePage() {
     // --- PLAYER ---
     if (prevHP[playerKey] < currHP[playerKey]) {
       setIsDefending("PLAYER");
+      playEffect(healingEffect);
       setTimeout(() => setIsDefending(null), 1000);
     } else if (prevHP[playerKey] > currHP[playerKey]) {
       setIsAttacking("PLAYER");
+      playEffect(attackedEffect);
       setTimeout(() => setIsAttacking(null), 1000);
     }
 
     // --- ENEMY ---
     if (prevHP[enemyKey] < currHP[enemyKey]) {
       setIsDefending("ENEMY");
+      playEffect(healingEffect);
       setTimeout(() => setIsDefending(null), 1000);
     } else if (prevHP[enemyKey] > currHP[enemyKey]) {
       setIsAttacking("ENEMY");
+      playEffect(attackedEffect);
       setTimeout(() => setIsAttacking(null), 1000);
     }
 

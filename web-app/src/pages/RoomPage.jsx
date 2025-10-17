@@ -8,6 +8,10 @@ import Button from "../components/ui/Button";
 import { Users, BookOpen, Sword, ArrowLeft } from "lucide-react";
 import Card from "../components/ui/Card";
 import Input from "../components/ui/Input";
+import useBackgroundMusic from "../hooks/useBackgroundMusic";
+import { setBackgroundMusicInstance } from "../utils/soundManager";
+
+import bgMusic from "../assets/bgMusic.mp3";
 
 function RoomPage() {
   const { roomId } = useParams();
@@ -18,6 +22,17 @@ function RoomPage() {
   const navigate = useNavigate();
 
   const MAX_TOPIC_LENGTH = 100;
+
+  const bgInstance = useBackgroundMusic(bgMusic, { loop: true, volume: 0.2 });
+
+  useEffect(() => {
+    if (bgInstance) {
+      setBackgroundMusicInstance(bgInstance);
+    }
+    return () => {
+      console.log("🚀 ~ Room ~ unmount");
+    };
+  }, []);
 
   useEffect(() => {
     if (room && room.status === GAME_STATUS.BATTLE) {
