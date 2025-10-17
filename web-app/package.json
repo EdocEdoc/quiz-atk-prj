@@ -14,6 +14,7 @@
     "clsx": "^2.1.1",
     "firebase": "^12.4.0",
     "framer-motion": "^12.23.24",
+    "howler": "^2.2.4",
     "lucide-react": "^0.545.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
