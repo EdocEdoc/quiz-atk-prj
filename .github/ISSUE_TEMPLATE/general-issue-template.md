@@ -1,5 +1,5 @@
 ---
-name: Custom issue template
+name: General Issue Template
 about: General Issue Template
 title: "<type>:<title>"
 labels: ''
