@@ -69,13 +69,13 @@ function HomePage() {
   useEffect(() => {
     if (rooms && rooms.length > 0 && user) {
       const myRoom = rooms.find((r) => r.hostId === user.uid);
-      if (myRoom) {
+      if (myRoom && !isCreating) {
         setSetshowRoomCreateJoin(false);
       } else {
         setSetshowRoomCreateJoin(true);
       }
     }
-  }, [rooms]);
+  }, [rooms, isCreating]);
 
   const handleCreateRoom = async () => {
     if (!topic.trim()) return;
@@ -154,10 +154,10 @@ function HomePage() {
           </a>
         </div>
 
-        {setshowRoomCreateJoin && (
-          <div className="grid md:grid-cols-2 gap-8 max-w-7xl w-full self-center h-auto items-start">
-            {/* Create Room */}
-            <Card className="p-6">
+        <div className="flex flex-row flex-wrap gap-8 max-w-7xl w-full self-center h-auto justify-center items-start">
+          {/* Create Room */}
+          {setshowRoomCreateJoin && (
+            <Card className="p-6 min-w-96">
               <h2 className="text-2xl font-bold text-white mb-4 flex items-center">
                 <Plus className="w-6 h-6 mr-2" />
                 Create Room
@@ -194,30 +194,30 @@ function HomePage() {
                 </Button>
               </div>
             </Card>
-            {/* Join Room */}
-            <Card className="p-6">
-              <h2 className="text-2xl font-bold text-white mb-4 flex items-center">
-                <Users className="w-6 h-6 mr-2" />
+          )}
+          {/* Join Room */}
+          <Card className="p-6 min-w-96">
+            <h2 className="text-2xl font-bold text-white mb-4 flex items-center">
+              <Users className="w-6 h-6 mr-2" />
+              Join Room
+            </h2>
+            <div className="space-y-4">
+              <Input
+                placeholder="Enter room code..."
+                value={roomCode}
+                onChange={(e) => setRoomCode(e.target.value)}
+                className="w-full"
+              />
+              <Button
+                onClick={handleJoinRoom}
+                disabled={!roomCode.trim()}
+                className="w-full bg-blue-600 hover:bg-blue-700"
+              >
                 Join Room
-              </h2>
-              <div className="space-y-4">
-                <Input
-                  placeholder="Enter room code..."
-                  value={roomCode}
-                  onChange={(e) => setRoomCode(e.target.value)}
-                  className="w-full"
-                />
-                <Button
-                  onClick={handleJoinRoom}
-                  disabled={!roomCode.trim()}
-                  className="w-full bg-blue-600 hover:bg-blue-700"
-                >
-                  Join Room
-                </Button>
-              </div>
-            </Card>
-          </div>
-        )}
+              </Button>
+            </div>
+          </Card>
+        </div>
 
         {/* Available Rooms */}
         <div className="mt-12">
