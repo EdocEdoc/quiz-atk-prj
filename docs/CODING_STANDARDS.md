@@ -109,7 +109,7 @@ Use automated tools to enforce consistency:
 
 Run before every commit:
 ```bash
-yarn dev
+yarn lint
 ```
 
 ---
