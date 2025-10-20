@@ -104,16 +104,12 @@ Its goal is to ensure **consistency**, **readability**, and **maintainability** 
 
 ## 9. 🧰 Linting & Formatting Tools
 Use automated tools to enforce consistency:
-- **JavaScript/TypeScript**: ESLint + Prettier  
-- **Python**: Black + Flake8  
-- **Django**: isort + pylint  
+- **JavaScript/TypeScript**: ESLint + Prettier   
 - **React**: Prettier + ESLint (Airbnb style)  
 
 Run before every commit:
 ```bash
-npm run lint
-# or
-black . && flake8
+yarn dev
 ```
 
 ---
@@ -142,31 +138,6 @@ Before merging a PR, ensure:
 
 ---
 
-## 13. 🧩 Example Snippets
-
-**Python:**
-```python
-def get_user_email(user_id: int) -> str:
-    """Fetches the user's email by their ID."""
-    user = User.objects.get(id=user_id)
-    return user.email
-```
-
-**JavaScript:**
-```js
-const fetchUser = async (id) => {
-  try {
-    const response = await fetch(`/api/users/${id}`);
-    return await response.json();
-  } catch (error) {
-    console.error("Error fetching user:", error);
-  }
-};
-```
-
----
-
 ## 14. 📜 References
-- [PEP 8 – Python Style Guide](https://peps.python.org/pep-0008/)
-- [Airbnb JavaScript Style Guide](https://github.com/airbnb/javascript)
-- [Google HTML/CSS Style Guide](https://google.github.io/styleguide/htmlcssguide.html)
+- **[DEVELOPMENT_GUIDE.md](./DEVELOPMENT_GUIDE.md)** - Complete development setup
+- **[DEPLOYMENT_CHECKLIST.md](./DEPLOYMENT_CHECKLIST.md)** - Deployment checklist
