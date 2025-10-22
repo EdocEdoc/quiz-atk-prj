@@ -19,7 +19,8 @@ dotenv.config();
 
 admin.initializeApp();
 
-const genAI = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
+const privateAPIKey = process.env.GEMINI_API_KEY;
+const genAI = new GoogleGenAI({ apiKey: privateAPIKey || "" });
 
 setGlobalOptions({ maxInstances: 10 });
 
@@ -126,12 +127,14 @@ export const generateLecture = functions.firestore.onDocumentUpdated(
           finalTopic: combinedTopic, //combinedTopic
           lecture: lectureData.lecture,
           quizList: lectureData.quizList,
+          lastUpdated: admin.firestore.FieldValue.serverTimestamp(),
         });
       } catch (error) {
         // Update room with error status
         await admin.firestore().collection("rooms").doc(roomId).update({
           status: "error",
           error: "Failed to generate lecture and quiz",
+          lastUpdated: admin.firestore.FieldValue.serverTimestamp(),
         });
       }
     }
@@ -364,12 +367,16 @@ export const processAnswer = onCall<ProcessAnswerData>(async (request) => {
     }
 
     const isCorrect = answerIndex === question.answerIndex;
-    const isAttacker = room?.currentAction === "attack";
+    const isEnemyAI = room?.guestId === "AI" && room?.currentTurn === "guest";
+
+    const isAttacker = isEnemyAI || room?.currentAction === "attack";
     const enemy: { host: "guest"; guest: "host" } = {
       host: "guest",
       guest: "host",
     };
-    const turnName: "host" | "guest" = room?.currentTurn || "host";
+    const turnName: "host" | "guest" = isEnemyAI
+      ? "guest"
+      : room?.currentTurn || "host";
 
     const newHp = { ...room.hp };
     let damage = 0;
@@ -399,6 +406,7 @@ export const processAnswer = onCall<ProcessAnswerData>(async (request) => {
       hp: newHp,
       currentTurn: isAttacker ? enemy[turnName] : turnName,
       currentAction: isAttacker ? "defend" : "attack",
+      lastUpdated: admin.firestore.FieldValue.serverTimestamp(),
     };
 
     if (winner) {

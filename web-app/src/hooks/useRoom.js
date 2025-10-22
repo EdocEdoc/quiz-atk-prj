@@ -156,12 +156,27 @@ export const joinRoom = async (roomId, guestId, guestTopic) => {
   }
 };
 
-export const startBattle = async (roomId) => {
+export const retryGenerate = async (roomId, retryCount) => {
+  console.log("🚀 ~ retryGenerate ~ retryCount:", retryCount);
+  try {
+    const roomRef = doc(db, "rooms", roomId);
+    await updateDoc(roomRef, {
+      status: GAME_STATUS.GENERATING,
+      retryCount: retryCount,
+    });
+  } catch (error) {
+    console.error("Error retry generate topic room:", error);
+    throw error;
+  }
+};
+
+export const startBattle = async (roomId, guestId) => {
   try {
     const roomRef = doc(db, "rooms", roomId);
     await updateDoc(roomRef, {
       status: GAME_STATUS.BATTLE,
-      currentTurn: Math.random() > 0.5 ? "host" : "guest",
+      currentTurn:
+        guestId == "AI" ? "host" : Math.random() > 0.5 ? "host" : "guest",
     });
   } catch (error) {
     console.error("Error starting battle:", error);
