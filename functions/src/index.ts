@@ -315,6 +315,98 @@ export const callGemini = onRequest(async (req, res) => {
   }
 });
 
+/**
+ * Creates a completed match record in Firestore.
+ * This function is non-blocking (not awaited by caller).
+ */
+async function createMatchRecord(roomRef: any, winner: string) {
+  try {
+    const roomSnap = await roomRef.get();
+    const roomData = roomSnap.data();
+
+    if (!roomData || !roomData.hostId || !roomData.guestId) {
+      console.error("Missing room data or player IDs:", roomRef.id);
+      return;
+    }
+
+    const matchRef = admin.firestore().collection("matches").doc();
+
+    const winnerId = winner === "host" ? roomData.hostId : roomData.guestId;
+    const loserId = winner === "host" ? roomData.guestId : roomData.hostId;
+
+    const winnerName =
+      winner === "host"
+        ? roomData.hostName || "Host"
+        : roomData.guestName || "Guest";
+
+    const loserName =
+      winner === "host"
+        ? roomData.guestName || "Guest"
+        : roomData.hostName || "Host";
+
+    const matchData = {
+      roomId: roomRef.id,
+      winner,
+      winnerId,
+      winnerName,
+      loserId,
+      loserName,
+      status: "completed",
+      date: admin.firestore.FieldValue.serverTimestamp(),
+    };
+
+    // Create global match record
+    await matchRef.set(matchData);
+
+    // Create player match records (fire and forget)
+    const userUpdates = [
+      // Always update the host
+      admin
+        .firestore()
+        .collection("users")
+        .doc(roomData.hostId)
+        .collection("matches")
+        .doc(matchRef.id)
+        .set({
+          roomId: roomRef.id,
+          matchRef: matchRef.path,
+          result: winner === "host" ? "win" : "lose",
+          opponentName:
+            winner === "host"
+              ? roomData.guestName || "Guest"
+              : roomData.hostName || "Host",
+          date: admin.firestore.FieldValue.serverTimestamp(),
+        }),
+    ];
+
+    // Only update guest if it's not an AI
+    if (roomData?.guestId && roomData.guestId !== "AI") {
+      userUpdates.push(
+        admin
+          .firestore()
+          .collection("users")
+          .doc(roomData.guestId)
+          .collection("matches")
+          .doc(matchRef.id)
+          .set({
+            roomId: roomRef.id,
+            matchRef: matchRef.path,
+            result: winner === "guest" ? "win" : "lose",
+            opponentName:
+              winner === "guest"
+                ? roomData.hostName || "Host"
+                : roomData.guestName || "Guest",
+            date: admin.firestore.FieldValue.serverTimestamp(),
+          })
+      );
+    }
+
+    console.log(`Match record created for room ${roomRef.id}`);
+  } catch (error) {
+    console.error("Error creating match record:", error);
+  }
+}
+
 export const processAnswer = onCall<ProcessAnswerData>(async (request) => {
   try {
     const { roomId, questionIndex, answerIndex, apiKey } = request.data;
@@ -426,6 +518,10 @@ export const processAnswer = onCall<ProcessAnswerData>(async (request) => {
       damage,
       timestamp: admin.firestore.FieldValue.serverTimestamp(),
     });
+
+    if (winner) {
+      createMatchRecord(roomRef, winner);
+    }
 
     return { isCorrect, damage, newHp, winner };
   } catch (error) {
