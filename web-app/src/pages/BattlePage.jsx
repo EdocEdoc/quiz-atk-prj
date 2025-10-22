@@ -84,11 +84,34 @@ function BattlePage() {
   const [isDefending, setIsDefending] = useState(null);
   const prevRoomHPRef = useRef(null);
 
+  const handleAttackAI = () => {
+    const aiAttack = () => {
+      // Generate a random answer index between 0 and 3
+      const ansIndex = Math.floor(Math.random() * 4);
+
+      // Ensure question index never goes below 0
+      const qIndex = Math.max(0, currentQuestionIndex - 1);
+
+      if (room?.hp.host > 0 && room?.hp.guest > 0) {
+        submitAnswer(ansIndex, qIndex);
+      }
+    };
+
+    setTimeout(() => {
+      aiAttack();
+    }, 3000);
+  };
+
   useEffect(() => {
     if (!room?.hp) return;
 
     reset();
     start();
+
+    if (room?.guestId == "AI" && room?.currentTurn == "guest") {
+      handleAttackAI();
+    }
+
     const prevHP = prevRoomHPRef.current;
     const currHP = room.hp;
 
@@ -162,12 +185,12 @@ function BattlePage() {
     setSelectedAnswer(answerIndex);
   };
 
-  const submitAnswer = async (paramForceAnswerIndex = null) => {
-    console.log(
-      "🚀 ~ submitAnswer ~ paramForceAnswerIndex:",
-      paramForceAnswerIndex
-    );
+  const submitAnswer = async (
+    paramForceAnswerIndex = null,
+    paramForceQuestionIndex = null
+  ) => {
     let forceAnswerIndex = null;
+    let forceQuestionIndex = null;
 
     if (
       paramForceAnswerIndex &&
@@ -179,7 +202,25 @@ function BattlePage() {
       forceAnswerIndex = paramForceAnswerIndex;
     }
 
-    if (isLoading) return;
+    if (
+      paramForceQuestionIndex &&
+      typeof paramForceQuestionIndex === "object" &&
+      paramForceQuestionIndex.nativeEvent
+    ) {
+      forceQuestionIndex = null;
+    } else {
+      forceQuestionIndex = paramForceQuestionIndex;
+    }
+
+    /* console.log(
+      "🚀 ~ submitAnswer ~ forceQuestionIndex forceAnswerIndex:",
+      forceQuestionIndex,
+      forceAnswerIndex,
+      isLoading,
+      isNaN(forceQuestionIndex)
+    ); */
+
+    if (isLoading && isNaN(forceQuestionIndex)) return;
 
     const appToken = import.meta.env.VITE_PRIVATE_API_KEY;
 
@@ -200,7 +241,9 @@ function BattlePage() {
 
       const SubmitData = {
         roomId,
-        questionIndex: currentQuestionIndex,
+        questionIndex: forceQuestionIndex
+          ? forceQuestionIndex
+          : currentQuestionIndex,
         answerIndex: selectedAnswer
           ? selectedAnswer
           : forceAnswerIndex
@@ -208,14 +251,16 @@ function BattlePage() {
           : 99,
         apiKey: appToken,
       };
-      console.log("🚀 ~ submitAnswer ~ SubmitData:", SubmitData);
 
       const result = await processAnswer(SubmitData);
 
       if (result.data) {
         // Move to next question or end battle
         if (currentQuestionIndex < room.quizList.length - 1) {
-          setCurrentQuestionIndex((prev) => prev + 1);
+          if (room?.guestId != "AI" || room?.currentTurn == "host") {
+            setCurrentQuestionIndex((prev) => prev + 1);
+          }
+
           setSelectedAnswer(null);
         } else {
           // Battle finished
@@ -340,7 +385,7 @@ function BattlePage() {
                 {currentQuestion?.question || "Loading question..."}
               </h2>
               <p className="text-sm mt-[-20px] mb-[-10px]">
-                {timeLeft || status.toUpperCase()}
+                Q{currentQuestionIndex + 1}: {timeLeft || status.toUpperCase()}
               </p>
             </div>
 
@@ -406,7 +451,10 @@ function BattlePage() {
             <Card>
               <div className="flex flex-col py-2 px-4">
                 <h3 className="text-xl font-bold text-white text-center">
-                  👹 {enemyConfig.name.toLocaleUpperCase()}
+                  👹{" "}
+                  {room?.guestId == "AI"
+                    ? "AI Enemy"
+                    : enemyConfig.name.toLocaleUpperCase()}
                 </h3>
                 <div className="h-2 bg-gray-300 rounded mt-1">
                   <motion.div

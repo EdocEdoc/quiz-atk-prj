@@ -1,7 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAuthContext } from "../contexts/AuthContext";
-import { joinRoom, startBattle, useRoom } from "../hooks/useRoom";
+import {
+  joinRoom,
+  retryGenerate,
+  startBattle,
+  useRoom,
+} from "../hooks/useRoom";
 import LoadingSpinner from "../components/LoadingSpinner";
 import { GAME_STATUS } from "../utils/types";
 import Button from "../components/ui/Button";
@@ -16,6 +21,7 @@ import {
   Clock,
   Home,
   RotateCcw,
+  Bot,
 } from "lucide-react";
 import Card from "../components/ui/Card";
 import Input from "../components/ui/Input";
@@ -52,6 +58,21 @@ function RoomPage() {
     }
   }, [room, roomId, navigate]);
 
+  const handleRetryGenerate = async () => {
+    console.log(
+      "🚀 ~ handleRetryGenerate ~ room?.retryCount:",
+      room?.retryCount
+    );
+    if (room?.retryCount >= 3) return;
+
+    try {
+      let locRetryCount = room?.retryCount ? room?.retryCount + 1 : 1;
+      await retryGenerate(roomId, locRetryCount);
+    } catch (e) {
+      console.log("🚀 ~ handleRetryGenerate ~ e:", e);
+    }
+  };
+
   const handleJoinRoom = async () => {
     if (!guestTopic.trim()) return;
 
@@ -65,9 +86,25 @@ function RoomPage() {
     }
   };
 
+  const handleBattleAI = async () => {
+    console.log("🚀 ~ handleBattleAI ~ room?.guestId:", room?.guestId);
+    if (room?.guestId) return;
+
+    console.log("🚀 ~ handleBattleAI ~ room?.guestId asdsad:", room?.guestId);
+
+    setIsJoining(true);
+    try {
+      await joinRoom(roomId, "AI", room?.hostTopic);
+    } catch (error) {
+      console.error("Error joining room:", error);
+    } finally {
+      setIsJoining(false);
+    }
+  };
+
   const handleStartBattle = async () => {
     try {
-      await startBattle(roomId);
+      await startBattle(roomId, room?.guestId);
     } catch (error) {
       console.error("Error starting battle:", error);
     }
@@ -168,7 +205,7 @@ function RoomPage() {
                   Host {isHost && "(You)"}
                 </h3>
                 <span
-                  className={`text-3xl font-bold ${
+                  className={` ml-8 text-3xl font-bold ${
                     room?.hp?.host > 5
                       ? "text-green-400"
                       : room?.hp?.host > 2
@@ -200,7 +237,9 @@ function RoomPage() {
                   {room.winner === "guest" && (
                     <Trophy className="w-5 h-5 mr-2 text-yellow-400" />
                   )}
-                  Guest {!isHost && "(You)"}
+                  {room?.guestId == "AI"
+                    ? "AI Enemy"
+                    : `Guest ${!isHost ? "(You)" : ""}`}
                 </h3>
                 <span
                   className={`text-3xl font-bold ml-10 ${
@@ -248,7 +287,7 @@ function RoomPage() {
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
           {/* Header */}
-          <div className="flex items-center justify-between mb-8">
+          <div className="flex flex-col md:flex-row items-center justify-between mb-8 ">
             <Button
               onClick={() => navigate("/")}
               variant="outline"
@@ -299,7 +338,7 @@ function RoomPage() {
             <Card className="p-6">
               <h2 className="text-xl font-bold text-white mb-4 flex items-center">
                 <Users className="w-5 h-5 mr-2" />
-                Guest
+                {room?.guestId == "AI" ? "AI Enemy" : "Guest"}
               </h2>
               {room.guestId ? (
                 <div className="space-y-4">
@@ -357,13 +396,57 @@ function RoomPage() {
                   </Button>
                 </div>
               ) : (
-                <p className="text-gray-300">Waiting for opponent...</p>
+                <div className="flex flex-col ">
+                  <p className="text-gray-300">Waiting for opponent...</p>
+                  <h2 className="text-xl font-bold text-white text-center">
+                    OR
+                  </h2>
+                  <Button
+                    onClick={handleBattleAI}
+                    className="bg-red-600 hover:bg-red-700 text-lg px-8 py-3"
+                  >
+                    <Bot className="w-5 h-5 mr-2" />
+                    Battle AI!
+                  </Button>
+                </div>
               )}
             </Card>
           </div>
+
+          {isHost &&
+            room.status == "error" &&
+            !loading &&
+            !isJoining &&
+            room?.retryCount < 3 && (
+              <div className="flex justify-center m-8">
+                <Button
+                  onClick={handleRetryGenerate}
+                  className="bg-red-600 hover:bg-red-700 text-lg px-8 py-3"
+                >
+                  <RotateCcw className="w-4 h-4 mr-2" />
+                  Retry topic generation... {`${room?.retryCount || 0}/3`}
+                </Button>
+              </div>
+            )}
+
+          {room.status == "error" &&
+            !loading &&
+            !isJoining &&
+            room?.retryCount >= 3 && (
+              <div className="flex justify-center m-8">
+                <Button
+                  onClick={() => navigate("/")}
+                  className="bg-red-600 hover:bg-red-700 text-lg px-8 py-3"
+                >
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Room error. Please create another room.
+                </Button>
+              </div>
+            )}
+
           {/* Lecture Section */}
           {room.status === GAME_STATUS.LECTURE && room.lecture && (
-            <Card className="mt-8 p-6">
+            <Card className="bg-amber-800 mt-8 p-6">
               <h2 className="text-2xl font-bold text-white mb-4 flex items-center">
                 <BookOpen className="w-6 h-6 mr-2" />
                 Study Material
