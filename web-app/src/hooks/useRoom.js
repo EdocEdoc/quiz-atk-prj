@@ -103,14 +103,21 @@ export const useRooms = () => {
       limit(20)
     );
 
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const roomsData = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-      setRooms(roomsData);
-      setLoading(false);
-    });
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        const roomsData = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setRooms(roomsData);
+        setLoading(false);
+      },
+      (error) => {
+        console.error("Error fetching rooms:", error);
+        setLoading(false);
+      }
+    );
 
     return () => unsubscribe();
   }, []);
