@@ -30,6 +30,7 @@ import { setBackgroundMusicInstance } from "../utils/soundManager";
 
 import bgMusic from "../assets/bgMusic.mp3";
 import FinishPage from "./FinishPage";
+import { getFirstWord } from "../utils/strings";
 
 function RoomPage() {
   const { roomId } = useParams();
@@ -78,7 +79,12 @@ function RoomPage() {
 
     setIsJoining(true);
     try {
-      await joinRoom(roomId, user.uid, guestTopic.trim());
+      await joinRoom(
+        roomId,
+        user.uid,
+        guestTopic.trim(),
+        getFirstWord(user?.displayName)
+      );
     } catch (error) {
       console.error("Error joining room:", error);
     } finally {
@@ -87,14 +93,11 @@ function RoomPage() {
   };
 
   const handleBattleAI = async () => {
-    console.log("🚀 ~ handleBattleAI ~ room?.guestId:", room?.guestId);
     if (room?.guestId) return;
-
-    console.log("🚀 ~ handleBattleAI ~ room?.guestId asdsad:", room?.guestId);
 
     setIsJoining(true);
     try {
-      await joinRoom(roomId, "AI", room?.hostTopic);
+      await joinRoom(roomId, "AI", room?.hostTopic, "AI");
     } catch (error) {
       console.error("Error joining room:", error);
     } finally {

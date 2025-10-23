@@ -9,23 +9,26 @@ import { RoomProvider } from "./contexts/RoomContext";
 import RoomPage from "./pages/RoomPage";
 import BattlePage from "./pages/BattlePage";
 import SciFiBattlefield from "./components/SciFiBattlefield";
+import { MatchesProvider } from "./contexts/MatchesContext";
 
 function App() {
   return (
     <SciFiBattlefield>
       <AuthProvider>
         <RoomProvider>
-          <Router>
-            <div className="App">
-              <Routes>
-                <Route path="/" element={<HomePage />} />
-                <Route path="/room/:roomId" element={<RoomPage />} />
-                <Route path="/battle/:roomId" element={<BattlePage />} />
-                <Route path="/battle" element={<BattlePage />} />
-                <Route path="*" element={<div>404 Not Found</div>} />
-              </Routes>
-            </div>
-          </Router>
+          <MatchesProvider>
+            <Router>
+              <div className="App">
+                <Routes>
+                  <Route path="/" element={<HomePage />} />
+                  <Route path="/room/:roomId" element={<RoomPage />} />
+                  <Route path="/battle/:roomId" element={<BattlePage />} />
+                  <Route path="/battle" element={<BattlePage />} />
+                  <Route path="*" element={<div>404 Not Found</div>} />
+                </Routes>
+              </div>
+            </Router>
+          </MatchesProvider>
         </RoomProvider>
       </AuthProvider>
     </SciFiBattlefield>

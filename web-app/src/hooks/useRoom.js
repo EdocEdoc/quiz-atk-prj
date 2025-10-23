@@ -125,10 +125,12 @@ export const useRooms = () => {
   return { rooms, loading };
 };
 
-export const createRoomAsync = async (hostId, hostTopic) => {
+export const createRoomAsync = async (hostId, hostTopic, hostName) => {
+  console.log("🚀 ~ createRoomAsync ~ hostName:", hostName);
   try {
     const roomData = {
       hostId,
+      hostName,
       guestId: null,
       status: "waiting",
       hostTopic,
@@ -149,12 +151,13 @@ export const createRoomAsync = async (hostId, hostTopic) => {
   }
 };
 
-export const joinRoom = async (roomId, guestId, guestTopic) => {
+export const joinRoom = async (roomId, guestId, guestTopic, guestName) => {
   try {
     const roomRef = doc(db, "rooms", roomId);
     await updateDoc(roomRef, {
       guestId,
       guestTopic,
+      guestName,
       status: GAME_STATUS.GENERATING,
     });
   } catch (error) {

@@ -16,11 +16,13 @@ import useBackgroundMusic from "../hooks/useBackgroundMusic";
 import { setBackgroundMusicInstance } from "../utils/soundManager";
 
 import bgMusic from "../assets/bgMusic.mp3";
-import useMatches from "../hooks/useMatches";
+import { useMatches } from "../contexts/MatchesContext";
+import { getFirstWord } from "../utils/strings";
+import MatchesList from "../components/MatchesList";
 
 const MAX_TOPIC_LENGTH = 100;
 
-const currentVerion = "1.4.0";
+const currentVerion = "1.4.1";
 
 function HomePage() {
   const {
@@ -40,26 +42,6 @@ function HomePage() {
   const [setshowRoomCreateJoin, setSetshowRoomCreateJoin] = useState(true);
 
   const bgInstance = useBackgroundMusic(bgMusic, { loop: true, volume: 0.2 });
-
-  /* useEffect(() => {
-    const sound = new Howl({
-      src: [bgMusic],
-      loop: true,
-      volume: 0.2,
-      html5: true,
-    });
-    setMusic(sound);
-  }, []);
- */
-  /* useEffect(() => {
-    if (music) {
-      const startMusic = () => {
-        music.play();
-        window.removeEventListener("click", startMusic);
-      };
-      window.addEventListener("click", startMusic);
-    }
-  }, []); */
 
   useEffect(() => {
     if (bgInstance) {
@@ -86,7 +68,11 @@ function HomePage() {
 
     setIsCreating(true);
     try {
-      const roomId = await createRoomAsync(user.uid, topic.trim());
+      const roomId = await createRoomAsync(
+        user.uid,
+        topic.trim(),
+        getFirstWord(user?.displayName)
+      );
       navigate(`/room/${roomId}`);
     } catch (error) {
       console.error("Error creating room:", error);
@@ -318,35 +304,11 @@ function HomePage() {
         </div>
       </div>
       {matches?.length > 0 && (
-        <Card className="lg:absolute right-4 top-4 w-full p-4 overflow-y-auto max-h-[90vh] bg-transparent border-transparent lg:w-80">
-          <h2 className="text-lg font-semibold mb-3 ">Recent Matches</h2>
-
+        <Card className="lg:absolute right-4 top-4 w-full p-4 overflow-y-auto max-h-[90vh] bg-transparent border-transparent lg:w-60">
           {matches.length === 0 ? (
             <p className="text-gray-500 text-sm text-center">No matches yet</p>
           ) : (
-            <ul className="space-y-3">
-              {matches.map((match) => (
-                <li
-                  key={match.id}
-                  className="p-3 rounded-xl border  border-gray-700 hover:bg-gray-800/60"
-                >
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm font-semibold ">
-                      {match.winnerName || "Unknown"} 🏆
-                    </span>
-                    <span className="text-xs text-gray-400">
-                      {match.status || "completed"}
-                    </span>
-                  </div>
-                  <p className="text-xs text-gray-500 mt-1">
-                    vs {match.loserName || "Opponent"}
-                  </p>
-                  <p className="text-xs text-gray-400 mt-1">
-                    Room: <span className="font-mono">{match.roomId}</span>
-                  </p>
-                </li>
-              ))}
-            </ul>
+            <MatchesList matches={matches} />
           )}
         </Card>
       )}

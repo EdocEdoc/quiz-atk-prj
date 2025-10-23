@@ -23,7 +23,11 @@ export const useAuth = () => {
           if (!userDoc.exists()) {
             await setDoc(
               doc(db, "users", user.uid),
-              createUser(user.uid, user.displayName || user.email.split("@")[0])
+              createUser(
+                user.uid,
+                user.displayName || user.email.split("@")[0],
+                user?.photoURL
+              )
             );
           }
         } catch (error) {
