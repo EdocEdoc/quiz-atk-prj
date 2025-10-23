@@ -344,6 +344,8 @@ async function createMatchRecord(roomRef: any, winner: string) {
         ? roomData.guestName || "Guest"
         : roomData.hostName || "Host";
 
+    // TODO: update winnerId and losserId not to be separated but in an array
+    // participants: [winnerId, losserId]
     const matchData = {
       roomId: roomRef.id,
       winner,

@@ -1,19 +1,20 @@
 import { useEffect, useState, useRef } from "react";
 import { useMatches } from "../contexts/MatchesContext";
 
-function MatchesList() {
-  const { matchesToDisplay } = useMatches();
+function MatchesList({ isUserMatches }) {
+  const { matchesToDisplay, matchesUserToDisplay } = useMatches();
+  const locMatches = isUserMatches ? matchesUserToDisplay : matchesToDisplay;
 
   return (
     <>
-      {matchesToDisplay?.length > 0 && (
+      {locMatches?.length > 0 && (
         <h2 className="text-lg font-semibold mb-5 text-center">
-          Recent Matches
+          {isUserMatches ? "Your " : "Global "}Matches
         </h2>
       )}
       <ul>
-        {matchesToDisplay &&
-          matchesToDisplay.map((match) => (
+        {locMatches &&
+          locMatches.map((match) => (
             <li
               key={match.id}
               className="p-3 rounded-xl border border-gray-700 hover:bg-gray-800/60 mb-2 

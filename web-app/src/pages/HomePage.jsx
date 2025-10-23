@@ -22,7 +22,7 @@ import MatchesList from "../components/MatchesList";
 
 const MAX_TOPIC_LENGTH = 100;
 
-const currentVerion = "1.4.1";
+const currentVerion = "1.4.2";
 
 function HomePage() {
   const {
@@ -34,7 +34,7 @@ function HomePage() {
 
   const { room, loading: roomLoading } = useRoom();
   const { rooms, loading: roomsListLoading } = useRooms();
-  const { matches, loading } = useMatches();
+  const { matches, loading, userMatches } = useMatches();
   const [topic, setTopic] = useState("");
   const [roomCode, setRoomCode] = useState("");
   const [isCreating, setIsCreating] = useState(false);
@@ -131,39 +131,6 @@ function HomePage() {
 
   return (
     <div className="min-h-screen">
-      {/* {user && user?.uid && (
-        <Card className="absolute left-4 top-4 w-80 p-4 overflow-y-auto max-h-[90vh] bg-transparent border-transparent">
-          <h2 className="text-lg font-semibold mb-3 ">Your Matches</h2>
-
-          {matches.length === 0 ? (
-            <p className="text-gray-500 text-sm text-center">No matches yet</p>
-          ) : (
-            <ul className="space-y-3">
-              {matches.map((match) => (
-                <li
-                  key={match.id}
-                  className="p-3 rounded-xl border  border-gray-700 hover:bg-gray-800/60"
-                >
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm font-semibold ">
-                      {match.winnerName || "Unknown"} 🏆
-                    </span>
-                    <span className="text-xs text-gray-400">
-                      {match.status || "completed"}
-                    </span>
-                  </div>
-                  <p className="text-xs text-gray-500 mt-1">
-                    vs {match.loserName || "Opponent"}
-                  </p>
-                  <p className="text-xs text-gray-400 mt-1">
-                    Room: <span className="font-mono">{match.roomId}</span>
-                  </p>
-                </li>
-              ))}
-            </ul>
-          )}
-        </Card>
-      )} */}
       <div className=" flex flex-col justify-center gap-10 align-middle min-h-screen mx-auto px-4 py-8">
         <div className="text-center mb-6">
           <h1 className="text-4xl font-bold text-white mb-2">Quiz Attack</h1>
@@ -303,12 +270,21 @@ function HomePage() {
           )}
         </div>
       </div>
+      {userMatches?.length > 0 && (
+        <Card className="lg:absolute left-4 top-4 w-full p-4 overflow-y-auto max-h-[90vh] bg-transparent border-transparent lg:w-60">
+          {matches.length === 0 ? (
+            <p className="text-gray-500 text-sm text-center">No matches yet</p>
+          ) : (
+            <MatchesList isUserMatches={true} />
+          )}
+        </Card>
+      )}
       {matches?.length > 0 && (
         <Card className="lg:absolute right-4 top-4 w-full p-4 overflow-y-auto max-h-[90vh] bg-transparent border-transparent lg:w-60">
           {matches.length === 0 ? (
             <p className="text-gray-500 text-sm text-center">No matches yet</p>
           ) : (
-            <MatchesList matches={matches} />
+            <MatchesList isUserMatches={false} />
           )}
         </Card>
       )}
